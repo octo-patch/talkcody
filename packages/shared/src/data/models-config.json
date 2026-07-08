@@ -371,6 +371,23 @@
       },
       "context_length": 204800
     },
+    "MiniMax-M3": {
+      "name": "MiniMax M3",
+      "imageInput": true,
+      "interleaved": true,
+      "providers": [
+        "MiniMax"
+      ],
+      "providerMappings": {
+        "MiniMax": "MiniMax-M3"
+      },
+      "pricing": {
+        "input": "0.0000006",
+        "output": "0.0000024",
+        "cachedInput": "0.00000012"
+      },
+      "context_length": 1000000
+    },
     "gemini-2.5-flash-image": {
       "name": "Nano Banana",
       "imageInput": true,
