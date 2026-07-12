@@ -1,5 +1,5 @@
 {
-  "version": "2026-04-25T07:20:08.393Z",
+  "version": "2026-07-12T07:05:16.000Z",
   "models": {
     "gpt-5.4-nano": {
       "name": "GPT-5.4 Nano",
@@ -343,7 +343,6 @@
     },
     "MiniMax-M2.7": {
       "name": "MiniMax M2.7",
-      "imageInput": true,
       "interleaved": true,
       "providers": [
         "MiniMax",
@@ -374,6 +373,7 @@
     "MiniMax-M3": {
       "name": "MiniMax M3",
       "imageInput": true,
+      "videoInput": true,
       "interleaved": true,
       "providers": [
         "MiniMax"
@@ -382,9 +382,39 @@
         "MiniMax": "MiniMax-M3"
       },
       "pricing": {
-        "input": "0.0000006",
-        "output": "0.0000024",
-        "cachedInput": "0.00000012"
+        "input": "0.0000003",
+        "output": "0.0000012",
+        "cachedInput": "0.00000006",
+        "tiers": [
+          {
+            "serviceTier": "standard",
+            "maxInputTokens": 512000,
+            "input": "0.0000003",
+            "output": "0.0000012",
+            "cachedInput": "0.00000006"
+          },
+          {
+            "serviceTier": "standard",
+            "minInputTokens": 512001,
+            "input": "0.0000006",
+            "output": "0.0000024",
+            "cachedInput": "0.00000012"
+          },
+          {
+            "serviceTier": "priority",
+            "maxInputTokens": 512000,
+            "input": "0.00000045",
+            "output": "0.0000018",
+            "cachedInput": "0.00000009"
+          },
+          {
+            "serviceTier": "priority",
+            "minInputTokens": 512001,
+            "input": "0.0000009",
+            "output": "0.0000036",
+            "cachedInput": "0.00000018"
+          }
+        ]
       },
       "context_length": 1000000
     },

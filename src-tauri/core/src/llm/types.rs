@@ -72,6 +72,24 @@ pub struct ModelPricing {
     pub cached_input: Option<String>,
     #[serde(rename = "cacheCreation")]
     pub cache_creation: Option<String>,
+    #[serde(default)]
+    pub tiers: Vec<ModelPricingTier>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ModelPricingTier {
+    #[serde(rename = "serviceTier")]
+    pub service_tier: String,
+    #[serde(default, rename = "minInputTokens")]
+    pub min_input_tokens: Option<u32>,
+    #[serde(default, rename = "maxInputTokens")]
+    pub max_input_tokens: Option<u32>,
+    pub input: String,
+    pub output: String,
+    #[serde(rename = "cachedInput")]
+    pub cached_input: Option<String>,
+    #[serde(rename = "cacheCreation")]
+    pub cache_creation: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -85,6 +85,8 @@ pub struct CalculateCostRequest {
     pub usage: TokenUsage,
     #[serde(rename = "modelConfigs")]
     pub model_configs: std::collections::HashMap<String, crate::llm::types::ModelConfig>,
+    #[serde(default, rename = "serviceTier")]
+    pub service_tier: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

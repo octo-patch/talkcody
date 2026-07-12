@@ -244,7 +244,8 @@ mod tests {
     use super::*;
     use crate::database::Database;
     use crate::llm::auth::api_key_manager::ApiKeyManager;
-    use crate::llm::types::{AuthType, ProtocolType, ProviderConfig};
+    use crate::llm::providers::provider_configs::builtin_providers;
+    use crate::llm::types::{AuthType, Message, MessageContent, ProtocolType, ProviderConfig};
     use std::sync::Arc;
     use tempfile::TempDir;
 
@@ -343,5 +344,71 @@ mod tests {
         assert!(result.is_err());
         let error_msg = result.unwrap_err();
         assert!(error_msg.contains("Authentication required"));
+    }
+
+    #[tokio::test]
+    async fn minimax_anthropic_api_root_builds_one_v1_messages_path() {
+        let temp_dir = TempDir::new().unwrap();
+        let db_path = temp_dir.path().join("test.db");
+        let db = Arc::new(Database::new(db_path.to_str().unwrap().to_string()));
+        db.connect().await.unwrap();
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT, updated_at INTEGER)",
+            vec![],
+        )
+        .await
+        .unwrap();
+
+        let api_key_manager = ApiKeyManager::new(db, temp_dir.path().to_path_buf());
+        api_key_manager
+            .set_setting("api_key_MiniMax", "test-key")
+            .await
+            .unwrap();
+
+        let config = builtin_providers()
+            .into_iter()
+            .find(|provider| provider.id == "MiniMax")
+            .unwrap();
+        let provider = DefaultProvider::new(config);
+        let messages = [Message::User {
+            content: MessageContent::Text("hello".to_string()),
+            provider_options: None,
+        }];
+        let context = ProviderContext {
+            provider_config: provider.config(),
+            api_key_manager: &api_key_manager,
+            model: "MiniMax-M3",
+            messages: &messages,
+            tools: None,
+            temperature: None,
+            max_tokens: Some(32),
+            top_p: None,
+            top_k: None,
+            provider_options: None,
+            trace_context: None,
+            conversation_mode: None,
+            input_mode: None,
+            previous_response_id: None,
+            transport_session_id: None,
+            allow_transport_fallback: None,
+            continuation_context: None,
+        };
+
+        let cn_request = provider.build_complete_request(&context).await.unwrap();
+        assert_eq!(
+            cn_request.url,
+            "https://api.minimaxi.com/anthropic/v1/messages"
+        );
+
+        api_key_manager
+            .set_setting("use_international_MiniMax", "true")
+            .await
+            .unwrap();
+        let global_request = provider.build_complete_request(&context).await.unwrap();
+        assert_eq!(
+            global_request.url,
+            "https://api.minimax.io/anthropic/v1/messages"
+        );
+        assert_eq!(global_request.url.matches("/v1/messages").count(), 1);
     }
 }

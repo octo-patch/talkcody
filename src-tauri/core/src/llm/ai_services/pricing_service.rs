@@ -1,5 +1,5 @@
 use crate::llm::ai_services::types::{CalculateCostRequest, CalculateCostResult, TokenUsage};
-use crate::llm::types::ModelConfig;
+use crate::llm::types::{ModelConfig, ModelPricing, ModelPricingTier};
 use std::collections::HashMap;
 
 pub struct PricingService;
@@ -16,9 +16,19 @@ impl PricingService {
         usage: &TokenUsage,
         model_configs: &HashMap<String, ModelConfig>,
     ) -> Result<f64, String> {
+        self.calculate_cost_for_service_tier(model_id, usage, model_configs, None)
+    }
+
+    pub fn calculate_cost_for_service_tier(
+        &self,
+        model_id: &str,
+        usage: &TokenUsage,
+        model_configs: &HashMap<String, ModelConfig>,
+        service_tier: Option<&str>,
+    ) -> Result<f64, String> {
         let model = self.get_model(model_id, model_configs);
 
-        let pricing = match model.and_then(|m| m.pricing.clone()) {
+        let pricing = match model.and_then(|m| m.pricing.as_ref()) {
             Some(p) => p,
             None => {
                 log::error!("Pricing information not available for model: {}", model_id);
@@ -26,15 +36,30 @@ impl PricingService {
             }
         };
 
-        let input_rate = Self::parse_rate(&pricing.input, 0.0);
-        let output_rate = Self::parse_rate(&pricing.output, 0.0);
-        let cached_input_rate = pricing
-            .cached_input
+        let selected_tier = Self::select_pricing_tier(pricing, usage.input_tokens, service_tier);
+        let (input, output, cached_input, cache_creation) = selected_tier
+            .map(|tier| {
+                (
+                    &tier.input,
+                    &tier.output,
+                    &tier.cached_input,
+                    &tier.cache_creation,
+                )
+            })
+            .unwrap_or((
+                &pricing.input,
+                &pricing.output,
+                &pricing.cached_input,
+                &pricing.cache_creation,
+            ));
+
+        let input_rate = Self::parse_rate(input, 0.0);
+        let output_rate = Self::parse_rate(output, 0.0);
+        let cached_input_rate = cached_input
             .as_ref()
             .map(|r| Self::parse_rate(r, input_rate))
             .unwrap_or(input_rate);
-        let cache_creation_rate = pricing
-            .cache_creation
+        let cache_creation_rate = cache_creation
             .as_ref()
             .map(|r| Self::parse_rate(r, input_rate))
             .unwrap_or(input_rate);
@@ -60,9 +85,33 @@ impl PricingService {
         &self,
         request: CalculateCostRequest,
     ) -> Result<CalculateCostResult, String> {
-        let cost =
-            self.calculate_cost(&request.model_id, &request.usage, &request.model_configs)?;
+        let cost = self.calculate_cost_for_service_tier(
+            &request.model_id,
+            &request.usage,
+            &request.model_configs,
+            request.service_tier.as_deref(),
+        )?;
         Ok(CalculateCostResult { cost })
+    }
+
+    fn select_pricing_tier<'a>(
+        pricing: &'a ModelPricing,
+        input_tokens: u32,
+        service_tier: Option<&str>,
+    ) -> Option<&'a ModelPricingTier> {
+        let service_tier = service_tier.unwrap_or("standard");
+
+        pricing.tiers.iter().find(|tier| {
+            tier.service_tier == service_tier
+                && tier
+                    .min_input_tokens
+                    .map(|minimum| input_tokens >= minimum)
+                    .unwrap_or(true)
+                && tier
+                    .max_input_tokens
+                    .map(|maximum| input_tokens <= maximum)
+                    .unwrap_or(true)
+        })
     }
 
     /// Get model config by ID (handles @provider suffix)
@@ -105,7 +154,7 @@ impl Default for PricingService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::llm::types::{ModelConfig, ModelPricing};
+    use crate::llm::types::{ModelConfig, ModelPricing, ModelPricingTier, ModelsConfiguration};
     use std::collections::HashMap;
 
     fn create_test_model_config(
@@ -128,6 +177,7 @@ mod tests {
                 output: output.to_string(),
                 cached_input: cached_input.map(|s| s.to_string()),
                 cache_creation: cache_creation.map(|s| s.to_string()),
+                tiers: Vec::new(),
             }),
             context_length: None,
         }
@@ -135,6 +185,64 @@ mod tests {
 
     fn create_simple_model_config(input: &str, output: &str) -> ModelConfig {
         create_test_model_config(input, output, None, None)
+    }
+
+    fn create_pricing_tier(
+        service_tier: &str,
+        min_input_tokens: Option<u32>,
+        max_input_tokens: Option<u32>,
+        input: &str,
+        output: &str,
+        cached_input: &str,
+    ) -> ModelPricingTier {
+        ModelPricingTier {
+            service_tier: service_tier.to_string(),
+            min_input_tokens,
+            max_input_tokens,
+            input: input.to_string(),
+            output: output.to_string(),
+            cached_input: Some(cached_input.to_string()),
+            cache_creation: None,
+        }
+    }
+
+    fn create_tiered_model_config() -> ModelConfig {
+        let mut config = create_simple_model_config("0.000001", "0.000002");
+        config.pricing.as_mut().unwrap().tiers = vec![
+            create_pricing_tier(
+                "standard",
+                None,
+                Some(100),
+                "0.000001",
+                "0.000002",
+                "0.0000005",
+            ),
+            create_pricing_tier(
+                "standard",
+                Some(101),
+                None,
+                "0.000002",
+                "0.000004",
+                "0.000001",
+            ),
+            create_pricing_tier(
+                "priority",
+                None,
+                Some(100),
+                "0.0000015",
+                "0.000003",
+                "0.00000075",
+            ),
+            create_pricing_tier(
+                "priority",
+                Some(101),
+                None,
+                "0.000003",
+                "0.000006",
+                "0.0000015",
+            ),
+        ];
+        config
     }
 
     #[test]
@@ -198,6 +306,44 @@ mod tests {
             + 60.0 * output_rate;
 
         assert!((cost - expected).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn selects_standard_pricing_tier_from_input_tokens() {
+        let service = PricingService::new();
+        let configs = HashMap::from([("tiered-model".to_string(), create_tiered_model_config())]);
+        let usage = TokenUsage {
+            input_tokens: 200,
+            output_tokens: 10,
+            cached_input_tokens: Some(50),
+            cache_creation_input_tokens: None,
+        };
+
+        let cost = service
+            .calculate_cost("tiered-model", &usage, &configs)
+            .unwrap();
+        let expected = 150.0 * 0.000002 + 50.0 * 0.000001 + 10.0 * 0.000004;
+
+        assert!((cost - expected).abs() < 1e-12);
+    }
+
+    #[test]
+    fn selects_requested_service_tier() {
+        let service = PricingService::new();
+        let configs = HashMap::from([("tiered-model".to_string(), create_tiered_model_config())]);
+        let usage = TokenUsage {
+            input_tokens: 100,
+            output_tokens: 10,
+            cached_input_tokens: None,
+            cache_creation_input_tokens: None,
+        };
+
+        let cost = service
+            .calculate_cost_for_service_tier("tiered-model", &usage, &configs, Some("priority"))
+            .unwrap();
+        let expected = 100.0 * 0.0000015 + 10.0 * 0.000003;
+
+        assert!((cost - expected).abs() < 1e-12);
     }
 
     #[test]
@@ -337,6 +483,7 @@ mod tests {
                 cache_creation_input_tokens: None,
             },
             model_configs: configs,
+            service_tier: None,
         };
 
         let result = service.calculate_cost_request(request).unwrap();
@@ -371,5 +518,36 @@ mod tests {
             + 500_000.0 * 0.00000002;
 
         assert!((cost - expected).abs() < f64::EPSILON * 1_000_000.0);
+    }
+
+    #[test]
+    fn bundled_minimax_models_match_current_metadata() {
+        let raw = include_str!("../../../../../packages/shared/src/data/models-config.json");
+        let config: ModelsConfiguration = serde_json::from_str(raw).unwrap();
+
+        let m3 = config.models.get("MiniMax-M3").unwrap();
+        assert!(m3.image_input);
+        assert!(m3.video_input);
+        assert!(m3.interleaved);
+        assert_eq!(m3.context_length, Some(1_000_000));
+        assert_eq!(m3.providers, vec!["MiniMax"]);
+        assert_eq!(
+            m3.provider_mappings
+                .as_ref()
+                .and_then(|mappings| mappings.get("MiniMax"))
+                .map(String::as_str),
+            Some("MiniMax-M3")
+        );
+        let pricing = m3.pricing.as_ref().unwrap();
+        assert_eq!(pricing.input, "0.0000003");
+        assert_eq!(pricing.output, "0.0000012");
+        assert_eq!(pricing.cached_input.as_deref(), Some("0.00000006"));
+        assert_eq!(pricing.tiers.len(), 4);
+
+        let m27 = config.models.get("MiniMax-M2.7").unwrap();
+        assert!(!m27.image_input);
+        assert!(!m27.video_input);
+        assert!(m27.interleaved);
+        assert_eq!(m27.context_length, Some(204_800));
     }
 }

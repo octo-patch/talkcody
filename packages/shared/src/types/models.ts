@@ -12,8 +12,25 @@ export interface ModelConfig {
   interleaved?: boolean; // Indicates interleaved thinking capability
   providers: string[]; // Will be validated against ProviderIds at runtime
   providerMappings?: Record<string, string>;
-  pricing?: { input: string; output: string; cachedInput?: string; cacheCreation?: string };
+  pricing?: ModelPricing;
   context_length?: number;
+}
+
+export interface ModelPriceRates {
+  input: string;
+  output: string;
+  cachedInput?: string;
+  cacheCreation?: string;
+}
+
+export interface ModelPricingTier extends ModelPriceRates {
+  serviceTier: string;
+  minInputTokens?: number;
+  maxInputTokens?: number;
+}
+
+export interface ModelPricing extends ModelPriceRates {
+  tiers?: ModelPricingTier[];
 }
 
 export interface ModelsConfiguration {

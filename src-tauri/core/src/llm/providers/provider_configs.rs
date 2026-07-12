@@ -172,7 +172,7 @@ pub fn builtin_providers() -> Vec<ProviderConfig> {
             supports_coding_plan: true,
             supports_international: true,
             coding_plan_base_url: None,
-            international_base_url: Some("https://api.minimaxi.chat/anthropic/v1".to_string()),
+            international_base_url: Some("https://api.minimax.io/anthropic/v1".to_string()),
             headers: None,
             extra_body: None,
             auth_type: AuthType::ApiKey,
@@ -373,4 +373,23 @@ pub fn builtin_providers() -> Vec<ProviderConfig> {
             auth_type: AuthType::Bearer,
         },
     ]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn minimax_provider_uses_current_anthropic_endpoints() {
+        let provider = builtin_providers()
+            .into_iter()
+            .find(|provider| provider.id == "MiniMax")
+            .unwrap();
+
+        assert_eq!(provider.base_url, "https://api.minimaxi.com/anthropic/v1");
+        assert_eq!(
+            provider.international_base_url.as_deref(),
+            Some("https://api.minimax.io/anthropic/v1")
+        );
+    }
 }

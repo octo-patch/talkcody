@@ -398,6 +398,7 @@ mod tests {
                     output: "2".to_string(),
                     cached_input: None,
                     cache_creation: None,
+                    tiers: Vec::new(),
                 }),
                 context_length: None,
             },
@@ -451,6 +452,7 @@ mod tests {
                 output: "2".to_string(),
                 cached_input: None,
                 cache_creation: None,
+                tiers: Vec::new(),
             }),
             context_length: None,
         };

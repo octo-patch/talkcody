@@ -280,6 +280,7 @@ export type CalculateCostRequest = {
   modelId: string;
   usage: TokenUsage;
   modelConfigs: Record<string, ModelConfig>;
+  serviceTier?: 'standard' | 'priority' | null;
 };
 
 export type CalculateCostResult = {
@@ -312,6 +313,7 @@ export type ModelConfig = {
   imageInput: boolean;
   imageOutput: boolean;
   audioInput: boolean;
+  videoInput: boolean;
   interleaved: boolean;
   providers: string[];
   providerMappings?: Record<string, string> | null;
@@ -320,6 +322,17 @@ export type ModelConfig = {
 };
 
 export type ModelPricing = {
+  input: string;
+  output: string;
+  cachedInput?: string | null;
+  cacheCreation?: string | null;
+  tiers?: ModelPricingTier[] | null;
+};
+
+export type ModelPricingTier = {
+  serviceTier: string;
+  minInputTokens?: number | null;
+  maxInputTokens?: number | null;
   input: string;
   output: string;
   cachedInput?: string | null;

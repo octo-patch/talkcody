@@ -192,6 +192,7 @@ mod tests {
                         output: "0.0002".to_string(),
                         cached_input: None,
                         cache_creation: None,
+                        tiers: Vec::new(),
                     }),
                     context_length: Some(8192),
                 },
