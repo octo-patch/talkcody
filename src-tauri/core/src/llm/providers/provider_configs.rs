@@ -166,13 +166,13 @@ pub fn builtin_providers() -> Vec<ProviderConfig> {
             id: "MiniMax".to_string(),
             name: "MiniMax".to_string(),
             protocol: ProtocolType::Claude,
-            base_url: "https://api.minimaxi.com/anthropic/v1".to_string(),
+            base_url: "https://api.minimaxi.com/anthropic".to_string(),
             api_key_name: "MINIMAX_API_KEY".to_string(),
             supports_oauth: false,
             supports_coding_plan: true,
             supports_international: true,
             coding_plan_base_url: None,
-            international_base_url: Some("https://api.minimax.io/anthropic/v1".to_string()),
+            international_base_url: Some("https://api.minimax.io/anthropic".to_string()),
             headers: None,
             extra_body: None,
             auth_type: AuthType::ApiKey,
@@ -386,10 +386,10 @@ mod tests {
             .find(|provider| provider.id == "MiniMax")
             .unwrap();
 
-        assert_eq!(provider.base_url, "https://api.minimaxi.com/anthropic/v1");
+        assert_eq!(provider.base_url, "https://api.minimaxi.com/anthropic");
         assert_eq!(
             provider.international_base_url.as_deref(),
-            Some("https://api.minimax.io/anthropic/v1")
+            Some("https://api.minimax.io/anthropic")
         );
     }
 }

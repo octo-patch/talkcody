@@ -203,6 +203,14 @@ impl Provider for DefaultProvider {
             .await
     }
 
+    async fn resolve_endpoint_path(&self, _ctx: &ProviderContext<'_>) -> String {
+        match self.protocol_type() {
+            ProtocolType::Claude if self.id() == "MiniMax" => "v1/messages".to_string(),
+            ProtocolType::Claude => "messages".to_string(),
+            ProtocolType::OpenAiCompatible => "chat/completions".to_string(),
+        }
+    }
+
     async fn get_credentials(&self, api_key_manager: &ApiKeyManager) -> Result<Creds, String> {
         use crate::llm::auth::api_key_manager::ProviderCredentials as AkmCreds;
 
