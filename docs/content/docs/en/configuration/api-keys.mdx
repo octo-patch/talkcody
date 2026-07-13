@@ -194,6 +194,17 @@ MiniMax's large language model service, supporting text generation and conversat
 8. Copy the API Key
 9. Paste it into TalkCody's MiniMax field
 
+#### API Endpoints
+
+The built-in MiniMax provider uses the Anthropic-compatible API. Leave **Use International** disabled for the Mainland China endpoint, or enable it for the international endpoint.
+
+| Region | OpenAI-compatible Base URL | Anthropic-compatible Base URL |
+|--------|----------------------------|-------------------------------|
+| International | `https://api.minimax.io/v1` | `https://api.minimax.io/anthropic` |
+| Mainland China | `https://api.minimaxi.com/v1` | `https://api.minimaxi.com/anthropic` |
+
+To use the OpenAI-compatible API, open **Settings > Custom Providers**, add an **OpenAI Compatible** provider with the Base URL for your region and your MiniMax API key, then add `MiniMax-M3` to that provider in **Settings > Models**. Enter the Base URL exactly as shown; do not append `/chat/completions` or `/v1/messages`.
+
 <Callout type="info">
 MiniMax offers free trial credits. New users receive a certain number of free API calls after registration.
 </Callout>
