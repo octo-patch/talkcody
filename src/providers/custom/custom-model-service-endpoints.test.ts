@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 // We need to unmock to test the actual implementation
 describe('CustomModelService - Provider Endpoints Configuration', () => {
-  it('should expose the MiniMax global Anthropic API root without a version suffix', async () => {
+  it('should build the MiniMax international models endpoint from the OpenAI-compatible root', async () => {
     const { PROVIDER_CONFIGS } = await import('@/providers/config/provider-config');
 
-    expect(PROVIDER_CONFIGS.MiniMax.internationalBaseUrl).toBe(
-      'https://api.minimax.io/anthropic'
+    expect(`${PROVIDER_CONFIGS.MiniMax.internationalBaseUrl}/models`).toBe(
+      'https://api.minimax.io/v1/models'
     );
   });
 

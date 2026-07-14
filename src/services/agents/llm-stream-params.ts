@@ -36,13 +36,21 @@ export class LLMStreamParams {
   }
 
   static buildProviderOptions(options: StreamParamOptions): ProviderOptions | undefined {
-    if (!options.enableReasoningOptions) {
-      return undefined;
-    }
-
     const { modelKey, providerId } = parseModelIdentifier(options.modelIdentifier);
     const normalizedModelKey = modelKey.toLowerCase();
     const normalizedProviderId = providerId?.toLowerCase();
+    const isMiniMaxM3 = normalizedModelKey === 'minimax-m3';
+
+    if (!options.enableReasoningOptions) {
+      return isMiniMaxM3
+        ? {
+            anthropic: {
+              thinking: { type: 'disabled' },
+            },
+          }
+        : undefined;
+    }
+
     const isDeepSeekV4 = normalizedModelKey.startsWith('deepseek-v4');
     const isNativeDeepSeek =
       normalizedProviderId === 'deepseek' || (!normalizedProviderId && isDeepSeekV4);
@@ -58,7 +66,7 @@ export class LLMStreamParams {
         },
       },
       anthropic: {
-        thinking: { type: 'enabled', budgetTokens: 12_000 },
+        thinking: isMiniMaxM3 ? { type: 'adaptive' } : { type: 'enabled', budgetTokens: 12_000 },
       },
       moonshot: {
         thinking: { type: 'enabled' },

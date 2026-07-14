@@ -44,7 +44,7 @@ export const PROVIDER_CONFIGS: ProviderRegistry = {
     type: 'openai-compatible',
     supportsCodingPlan: true,
     supportsInternational: true,
-    internationalBaseUrl: 'https://api.minimax.io/anthropic',
+    internationalBaseUrl: 'https://api.minimax.io/v1',
   },
 
   zhipu: {

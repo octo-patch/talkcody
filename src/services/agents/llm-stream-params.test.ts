@@ -52,6 +52,26 @@ describe('LLMStreamParams', () => {
       expect(providerOptions.openai).toBeUndefined();
     });
 
+    it('uses adaptive thinking for MiniMax M3 when reasoning is enabled', () => {
+      const providerOptions = LLMStreamParams.buildProviderOptions({
+        modelIdentifier: 'MiniMax-M3@MiniMax',
+        reasoningEffort: 'high',
+        enableReasoningOptions: true,
+      }) as Record<string, unknown>;
+
+      expect(providerOptions.anthropic).toEqual({ thinking: { type: 'adaptive' } });
+    });
+
+    it('disables MiniMax M3 thinking when reasoning is disabled', () => {
+      const providerOptions = LLMStreamParams.buildProviderOptions({
+        modelIdentifier: 'MiniMax-M3@MiniMax',
+        reasoningEffort: 'high',
+        enableReasoningOptions: false,
+      }) as Record<string, unknown>;
+
+      expect(providerOptions.anthropic).toEqual({ thinking: { type: 'disabled' } });
+    });
+
     it('returns undefined when reasoning options are disabled', () => {
       expect(
         LLMStreamParams.buildProviderOptions({
