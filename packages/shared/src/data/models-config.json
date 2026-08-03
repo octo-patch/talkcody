@@ -382,9 +382,9 @@
         "MiniMax": "MiniMax-M3"
       },
       "pricing": {
-        "input": "0.0000003",
-        "output": "0.0000012",
-        "cachedInput": "0.00000006",
+        "input": "0.0000006",
+        "output": "0.0000024",
+        "cachedInput": "0.00000012",
         "tiers": [
           {
             "serviceTier": "standard",
