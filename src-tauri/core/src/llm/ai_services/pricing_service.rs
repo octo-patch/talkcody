@@ -539,9 +539,10 @@ mod tests {
             Some("MiniMax-M3")
         );
         let pricing = m3.pricing.as_ref().unwrap();
-        assert_eq!(pricing.input, "0.0000003");
-        assert_eq!(pricing.output, "0.0000012");
-        assert_eq!(pricing.cached_input.as_deref(), Some("0.00000006"));
+        assert_eq!(pricing.input, "0.0000006");
+        assert_eq!(pricing.output, "0.0000024");
+        assert_eq!(pricing.cached_input.as_deref(), Some("0.00000012"));
+        assert!(pricing.cache_creation.is_none());
         assert_eq!(pricing.tiers.len(), 4);
 
         let m27 = config.models.get("MiniMax-M2.7").unwrap();
@@ -549,5 +550,10 @@ mod tests {
         assert!(!m27.video_input);
         assert!(m27.interleaved);
         assert_eq!(m27.context_length, Some(204_800));
+        let pricing = m27.pricing.as_ref().unwrap();
+        assert_eq!(pricing.input, "0.0000003");
+        assert_eq!(pricing.output, "0.0000012");
+        assert_eq!(pricing.cached_input.as_deref(), Some("0.00000006"));
+        assert_eq!(pricing.cache_creation.as_deref(), Some("0.000000375"));
     }
 }
