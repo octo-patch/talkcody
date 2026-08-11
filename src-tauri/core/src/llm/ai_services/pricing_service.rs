@@ -543,7 +543,7 @@ mod tests {
         assert_eq!(pricing.output, "0.0000024");
         assert_eq!(pricing.cached_input.as_deref(), Some("0.00000012"));
         assert!(pricing.cache_creation.is_none());
-        assert_eq!(pricing.tiers.len(), 4);
+        assert!(pricing.tiers.is_empty());
 
         let m27 = config.models.get("MiniMax-M2.7").unwrap();
         assert!(!m27.image_input);

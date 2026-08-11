@@ -384,37 +384,7 @@
       "pricing": {
         "input": "0.0000006",
         "output": "0.0000024",
-        "cachedInput": "0.00000012",
-        "tiers": [
-          {
-            "serviceTier": "standard",
-            "maxInputTokens": 512000,
-            "input": "0.0000003",
-            "output": "0.0000012",
-            "cachedInput": "0.00000006"
-          },
-          {
-            "serviceTier": "standard",
-            "minInputTokens": 512001,
-            "input": "0.0000006",
-            "output": "0.0000024",
-            "cachedInput": "0.00000012"
-          },
-          {
-            "serviceTier": "priority",
-            "maxInputTokens": 512000,
-            "input": "0.00000045",
-            "output": "0.0000018",
-            "cachedInput": "0.00000009"
-          },
-          {
-            "serviceTier": "priority",
-            "minInputTokens": 512001,
-            "input": "0.0000009",
-            "output": "0.0000036",
-            "cachedInput": "0.00000018"
-          }
-        ]
+        "cachedInput": "0.00000012"
       },
       "context_length": 1000000
     },
