@@ -2,6 +2,7 @@ use crate::llm::auth::api_key_manager::ApiKeyManager;
 use crate::llm::image_generation::aigateway::AIGatewayImageClient;
 use crate::llm::image_generation::dashscope::DashScopeImageClient;
 use crate::llm::image_generation::google::GoogleImageClient;
+use crate::llm::image_generation::minimax::MiniMaxImageClient;
 use crate::llm::image_generation::openai::OpenAiImageClient;
 use crate::llm::image_generation::types::{ImageGenerationRequest, ImageGenerationResponse};
 use crate::llm::image_generation::volcengine::VolcengineImageClient;
@@ -118,6 +119,17 @@ impl ImageGenerationService {
                 }
                 "alibaba" => {
                     let client = DashScopeImageClient::new(provider.clone());
+                    let images = client
+                        .generate(api_keys, &provider_model_name, request)
+                        .await?;
+                    Ok(ImageGenerationResponse {
+                        provider: provider_id,
+                        images,
+                        request_id: None,
+                    })
+                }
+                "MiniMax" => {
+                    let client = MiniMaxImageClient::new(provider.clone());
                     let images = client
                         .generate(api_keys, &provider_model_name, request)
                         .await?;

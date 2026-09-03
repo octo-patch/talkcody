@@ -496,6 +496,17 @@
         "output": "0"
       }
     },
+    "image-01": {
+      "name": "MiniMax Image-01",
+      "imageInput": false,
+      "imageOutput": true,
+      "providers": [
+        "MiniMax"
+      ],
+      "providerMappings": {
+        "MiniMax": "image-01"
+      }
+    },
     "doubao-seedream-4-5-251128": {
       "name": "Image Doubao Seedream",
       "imageInput": false,
