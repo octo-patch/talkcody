@@ -192,13 +192,6 @@ impl LlmProtocol for ClaudeProtocol {
             }
         }
 
-        // MiniMax M3.1 Flash always reasons through the Anthropic endpoint.
-        // Keep the provider contract authoritative even when a generic client
-        // supplies a disabled thinking option.
-        if model == "MiniMax-M3.1-Flash" {
-            body["thinking"] = json!({ "type": "adaptive" });
-        }
-
         if let Some(extra) = extra_body {
             if let Some(obj) = body.as_object_mut() {
                 if let Some(extra_obj) = extra.as_object() {
@@ -207,6 +200,13 @@ impl LlmProtocol for ClaudeProtocol {
                     }
                 }
             }
+        }
+
+        // MiniMax M3.1 Flash always reasons through the Anthropic endpoint.
+        // Keep the provider contract authoritative even when generic provider
+        // or extra-body options request disabled thinking.
+        if model == "MiniMax-M3.1-Flash" {
+            body["thinking"] = json!({ "type": "adaptive" });
         }
 
         Ok(body)
@@ -637,7 +637,7 @@ mod tests {
             None,
             None,
             Some(&json!({ "anthropic": { "thinking": { "type": "disabled" } } })),
-            None,
+            Some(&json!({ "thinking": { "type": "disabled" } })),
         )
         .expect("build request");
 
