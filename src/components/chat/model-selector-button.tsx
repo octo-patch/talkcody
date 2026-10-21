@@ -45,16 +45,27 @@ export function ModelSelectorButton() {
     return parts[0] || '';
   }, [modelTypeMain]);
 
+  // Keep legacy MiniMax models resolvable for saved requests while keeping them
+  // out of ordinary choices. A selected legacy model remains visible so loading
+  // existing settings never silently changes the model.
+  const pickerModels = useMemo(
+    () =>
+      availableModels.filter(
+        (model) => model.key !== 'MiniMax-M2.7' || model.key === currentModelKey
+      ),
+    [availableModels, currentModelKey]
+  );
+
   // Use shared search hook
   const { filteredModels, hasSearchQuery } = useModelSearch({
-    models: availableModels,
+    models: pickerModels,
     searchQuery,
   });
 
   // Define priority models (these will appear at the top of the list)
   // Format: `${modelKey}@${provider}` or just `${modelKey}` to match any provider
   const priorityModelIdentifiers = useMemo(
-    () => ['gpt-5.5@openai', 'kimi-k2.6@kimi_coding', 'MiniMax-M2.7@talkcody'],
+    () => ['gpt-5.5@openai', 'kimi-k2.6@kimi_coding', 'MiniMax-M3.1-Flash@MiniMax'],
     []
   );
 

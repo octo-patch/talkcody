@@ -545,15 +545,28 @@ mod tests {
         assert!(pricing.cache_creation.is_none());
         assert!(pricing.tiers.is_empty());
 
-        let m27 = config.models.get("MiniMax-M2.7").unwrap();
-        assert!(!m27.image_input);
-        assert!(!m27.video_input);
-        assert!(m27.interleaved);
-        assert_eq!(m27.context_length, Some(204_800));
-        let pricing = m27.pricing.as_ref().unwrap();
-        assert_eq!(pricing.input, "0.0000003");
-        assert_eq!(pricing.output, "0.0000012");
-        assert_eq!(pricing.cached_input.as_deref(), Some("0.00000006"));
-        assert_eq!(pricing.cache_creation.as_deref(), Some("0.000000375"));
+        let flash = config.models.get("MiniMax-M3.1-Flash").unwrap();
+        assert!(flash.image_input);
+        assert!(flash.video_input);
+        assert!(flash.interleaved);
+        assert_eq!(flash.context_length, Some(1_000_000));
+        assert_eq!(flash.providers, vec!["MiniMax"]);
+        assert_eq!(
+            flash
+                .provider_mappings
+                .as_ref()
+                .and_then(|mappings| mappings.get("MiniMax"))
+                .map(String::as_str),
+            Some("MiniMax-M3.1-Flash")
+        );
+        let pricing = flash.pricing.as_ref().unwrap();
+        assert_eq!(pricing.input, "0.00000015");
+        assert_eq!(pricing.output, "0.0000006");
+        assert_eq!(pricing.cached_input.as_deref(), Some("0.000000015"));
+        assert!(pricing.cache_creation.is_none());
+        assert!(pricing.tiers.is_empty());
+
+        // M2.7 remains in the config for explicit legacy/saved requests.
+        assert!(config.models.contains_key("MiniMax-M2.7"));
     }
 }

@@ -192,6 +192,13 @@ impl LlmProtocol for ClaudeProtocol {
             }
         }
 
+        // MiniMax M3.1 Flash always reasons through the Anthropic endpoint.
+        // Keep the provider contract authoritative even when a generic client
+        // supplies a disabled thinking option.
+        if model == "MiniMax-M3.1-Flash" {
+            body["thinking"] = json!({ "type": "adaptive" });
+        }
+
         if let Some(extra) = extra_body {
             if let Some(obj) = body.as_object_mut() {
                 if let Some(extra_obj) = extra.as_object() {
@@ -610,6 +617,31 @@ mod tests {
         );
         assert_eq!(body.get("thinking"), Some(&json!({ "type": "enabled" })));
         assert_eq!(body.get("max_output_tokens"), Some(&json!(128)));
+    }
+
+    #[test]
+    fn minimax_flash_request_forces_adaptive_thinking() {
+        let protocol = ClaudeProtocol;
+        let messages = vec![Message::User {
+            content: MessageContent::Text("hi".to_string()),
+            provider_options: None,
+        }];
+
+        let body = LlmProtocol::build_request(
+            &protocol,
+            "MiniMax-M3.1-Flash",
+            &messages,
+            None,
+            None,
+            Some(1024),
+            None,
+            None,
+            Some(&json!({ "anthropic": { "thinking": { "type": "disabled" } } })),
+            None,
+        )
+        .expect("build request");
+
+        assert_eq!(body.get("thinking"), Some(&json!({ "type": "adaptive" })));
     }
 
     #[test]
